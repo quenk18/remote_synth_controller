@@ -1,9 +1,9 @@
+#include "pca9555.h"
 #include <esp_log.h>
-#include <pca9555.h>
 
 constexpr char* TAG = "PCA9555";
-PCA9555::PCA9555(uint8_t i2c_addr, i2c_port num,
-                 i2c_mode mode uint8_t host_interrupt_pin, bool active_high)
+PCA9555::PCA9555(uint8_t i2c_addr, i2c_port_t num, i2c_mode_t mode,
+                 uint8_t host_interrupt_pin, bool active_high)
     : _i2c_addr(i2c_addr),
       _i2c_num(num),
       _mode(mode),
@@ -16,10 +16,10 @@ esp_err_t PCA9555::getPortConfig(uint8_t* config, GpioPort port) {
         esp_err_t err;
         uint8_t command;
         switch (port) {
-                case PORT0:
+                case GpioPort::PORT0:
                         command = 0x06;
                         break;
-                case PORT1:
+                case GpioPort::PORT1:
                         command = 0x07;
                         break;
                 default:
@@ -31,17 +31,17 @@ esp_err_t PCA9555::getPortConfig(uint8_t* config, GpioPort port) {
 
         err = i2c_master_write_read_device(_i2c_num, _i2c_addr, &command, 1,
                                            config, 1, _timeout);
-        return err
+        return err;
 }
 
-esp_err_t PCA9555::getPortInputState(uint8_t* port_state GpioPort port) {
+esp_err_t PCA9555::getPortInputState(uint8_t* port_state, GpioPort port) {
         esp_err_t err;
         uint8_t command;
         switch (port) {
-                case PORT0:
+                case GpioPort::PORT0:
                         command = 0x00;
                         break;
-                case PORT1:
+                case GpioPort::PORT1:
                         command = 0x01;
                         break;
                 default:
@@ -55,14 +55,16 @@ esp_err_t PCA9555::getPortInputState(uint8_t* port_state GpioPort port) {
         return err;
 }
 
-esp_err_t PCA9555::getPortOutputState(uint8_t* port_state GpioPort port) {
+esp_err_t PCA9555::getPortOutputState(uint8_t* port_state, GpioPort port) {
         esp_err_t err;
         uint8_t command;
         switch (port) {
-                case PORT0:
+                case GpioPort::PORT0:
                         command = 0x02;
-                case PORT1:
+                        break;
+                case GpioPort::PORT1:
                         command = 0x03;
+                        break;
                 default:
                         err = ESP_ERR_INVALID_ARG;
                         ESP_LOGE(TAG, "Given port for config not valid!!");
@@ -89,11 +91,11 @@ esp_err_t PCA9555::setPinMode(uint8_t mode, uint8_t pin, GpioPort port) {
         esp_err_t err;
         uint8_t config_data[2];
         switch (port) {
-                case PORT0:
+                case GpioPort::PORT0:
                         config_data[0] = 0x06;
                         break;
 
-                case PORT1:
+                case GpioPort::PORT1:
                         config_data[0] = 0x07;
                         break;
 
@@ -104,16 +106,16 @@ esp_err_t PCA9555::setPinMode(uint8_t mode, uint8_t pin, GpioPort port) {
                         break;
         }
         uint8_t port_config;
-        err = getPortconfig(&port_config, port);
+        err = getPortConfig(&port_config, port);
         if (err != ESP_OK) {
                 return err;
         }
         switch (mode) {
-                case INPUT:
+                case 1: // INPUT
                         config_data[1] = port_config | (1 << pin);
                         break;
 
-                case OUTPUT:
+                case 0: // OUTPUT
                         config_data[1] = port_config & ~(1 << pin);
                         break;
 
@@ -133,7 +135,7 @@ esp_err_t PCA9555::setPinMode(uint8_t mode, uint8_t pin, GpioPort port) {
 esp_err_t PCA9555::readPin(uint8_t* level, uint8_t pin, GpioPort port) {
         esp_err_t err;
         uint8_t port_state;
-        err = getPortInputState(port_state, port);
+        err = getPortInputState(&port_state, port);
         if (err != ESP_OK) {
                 return err;
         }
@@ -141,20 +143,20 @@ esp_err_t PCA9555::readPin(uint8_t* level, uint8_t pin, GpioPort port) {
         return err;
 }
 
-esp_err_t PCA9555 : writePin(uint8_t level, uint8_t pin, GpioPort port) {
+esp_err_t PCA9555::writePin(uint8_t level, uint8_t pin, GpioPort port) {
         esp_err_t err;
         uint8_t port_state;
-        err = getPortOutputState(port_state, port);
+        err = getPortOutputState(&port_state, port);
         if (err != ESP_OK) {
                 return err;
         }
 
         uint8_t command[2];
         switch (port) {
-                case PORT0:
+                case GpioPort::PORT0:
                         command[0] = 0x02;
                         break;
-                case PORT1:
+                case GpioPort::PORT1:
                         command[0] = 0x03;
                         break;
                 default:
