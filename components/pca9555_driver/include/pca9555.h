@@ -30,5 +30,4 @@ class PCA9555 {
         i2c_mode_t _mode;
         uint8_t _host_interrupt_pin;
         bool _active_high;
-        TickType_t _timeout;
 };
