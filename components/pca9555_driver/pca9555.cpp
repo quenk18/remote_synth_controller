@@ -4,7 +4,7 @@
 
 constexpr char* TAG = "PCA9555";
 PCA9555::PCA9555(uint8_t i2c_addr, i2c_port_t num, i2c_mode_t mode,
-                 uint8_t host_interrupt_pin, bool active_high)
+                 gpio_num_t host_interrupt_pin, bool active_high)
     : _i2c_addr(i2c_addr),
       _i2c_num(num),
       _mode(mode),
@@ -192,6 +192,48 @@ esp_err_t PCA9555::writePin(uint8_t level, uint8_t pin, GpioPort port) {
         }
         err = i2c_master_write_to_device(_i2c_num, _i2c_addr, command, 2,
                                          1000 / portTICK_PERIOD_MS);
+
+        return err;
+}
+
+esp_err_t PCA9555::attachInterrupt(gpio_isr_t gpio_handler, void *arg) {
+        esp_err_t err;
+        gpio_config_t io_conf = {
+            .pin_bit_mask = (1ULL << _host_interrupt_pin),  // GPIO pin 5
+            .mode = GPIO_MODE_INPUT,
+            .intr_type =
+                GPIO_INTR_NEGEDGE  // Trigger on both rising and falling edges
+        };
+
+        err = gpio_config(&io_conf);
+        if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to configure host interrupt GPIO!");
+                return err;
+        }
+
+        err = gpio_set_intr_type(_host_interrupt_pin, GPIO_INTR_NEGEDGE);
+        if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to set interrupt type!");
+                return err;
+        }
+
+        err = gpio_intr_enable(_host_interrupt_pin);
+        if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to enable interrupt on host pin!");
+                return err;
+        }
+
+        err = gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
+        if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to install isr service on gpio!");
+                return err;
+        }
+
+        err = gpio_isr_handler_add(_host_interrupt_pin, gpio_handler, arg);
+        if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to add isr handler on gpio!");
+                return err;
+        }
 
         return err;
 }

@@ -1,4 +1,5 @@
 #include "driver/i2c.h"
+#include "driver/gpio.h"
 
 class PCA9555 {
        public:
@@ -8,7 +9,7 @@ class PCA9555 {
         };
 
         PCA9555(uint8_t i2c_addr, i2c_port_t num, i2c_mode_t mode,
-                uint8_t host_interrupt_pin, bool active_high);
+                gpio_num_t host_interrupt_pin, bool active_high);
 
         esp_err_t setPinMode(uint8_t mode, uint8_t pin, GpioPort port);
 
@@ -18,7 +19,7 @@ class PCA9555 {
 
         esp_err_t writePin(uint8_t level, uint8_t pin, GpioPort port);
 
-        //void attachInterrupt(std::function<void> callback);
+        esp_err_t attachInterrupt(gpio_isr_t gpio_handler, void *arg);
 
        private:
         esp_err_t getPortConfig(uint8_t *config, GpioPort port);
@@ -28,6 +29,6 @@ class PCA9555 {
         uint8_t _i2c_addr;
         i2c_port_t _i2c_num;
         i2c_mode_t _mode;
-        uint8_t _host_interrupt_pin;
+        gpio_num_t _host_interrupt_pin;
         bool _active_high;
 };
