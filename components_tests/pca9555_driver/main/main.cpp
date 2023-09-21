@@ -10,7 +10,7 @@ static const char *TAG = "Test PCA9555";
 constexpr uint8_t PCA9555_I2C_ADDR = 0x20;
 constexpr uint8_t ESP32_SDA_PIN = 6;
 constexpr uint8_t ESP32_SCL_PIN = 7;
-constexpr uint32_t ESP32_I2C_CLK_SPEED = 100000;
+constexpr uint32_t ESP32_I2C_CLK_SPEED = 400000;
 
 constexpr uint8_t INTERRUPT_PIN = 6;
 extern "C" {
@@ -42,7 +42,8 @@ void app_main(void) {
                              INTERRUPT_PIN, true);
 
         for (int i = 0; i < 8; i++) {
-                err = GpioExpander.setPinMode(1, i, PCA9555::GpioPort::PORT1);
+                err = GpioExpander.setPinMode(i%2, i, PCA9555::GpioPort::PORT1);
+                err = GpioExpander.writePin(0, i, PCA9555::GpioPort::PORT1);
                 if (err != ESP_OK) {
                         ESP_LOGE(TAG,
                                  "Failed to set GPIO Mode of GPIO Expander!!");
