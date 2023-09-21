@@ -85,10 +85,11 @@ esp_err_t PCA9555::getPinMode(uint8_t* pin_mode, uint8_t pin, GpioPort port) {
         if (err != ESP_OK) {
                 return err;
         }
-        if (port_config & (1 << pin)) {
+        if ((port_config >> pin) & 1) {
                 *pin_mode = 1;
+        } else {
+                *pin_mode = 0;
         }
-        *pin_mode = 0;
         return err;
 }
 
@@ -147,8 +148,9 @@ esp_err_t PCA9555::readPin(uint8_t* level, uint8_t pin, GpioPort port) {
         }
         if (port_state & (1 << pin)) {
                 *level = 1;
+        } else {
+                *level = 0;
         }
-        *level = 0;
         return err;
 }
 

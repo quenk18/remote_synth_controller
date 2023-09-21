@@ -8,8 +8,8 @@
 static const char *TAG = "Test PCA9555";
 
 constexpr uint8_t PCA9555_I2C_ADDR = 0x20;
-constexpr uint8_t ESP32_SDA_PIN = 4;
-constexpr uint8_t ESP32_SCL_PIN = 5;
+constexpr uint8_t ESP32_SDA_PIN = 6;
+constexpr uint8_t ESP32_SCL_PIN = 7;
 constexpr uint32_t ESP32_I2C_CLK_SPEED = 100000;
 
 constexpr uint8_t INTERRUPT_PIN = 6;
@@ -55,7 +55,7 @@ void app_main(void) {
                         uint8_t level;
                         GpioExpander.readPin(&level, i,
                                              PCA9555::GpioPort::PORT1);
-                        ESP_LOGI(TAG, "Level of %d: %d", i, level);
+                        ESP_LOGI(TAG, "Level of %d of PORT1: %d", i, level);
                 }
                 vTaskDelay(pdMS_TO_TICKS(1000));
         }
